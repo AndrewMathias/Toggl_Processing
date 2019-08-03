@@ -1,6 +1,6 @@
 # Toggl_Processing
 
-##Obtaining Usable Data from Toggl:
+## Obtaining Usable Data from Toggl:
 
 * Clone the repository and make sure you have 
     * FileGrabber.py
