@@ -1,14 +1,17 @@
 # HelperFunctions.py
 # Author: Andrew Mathias
 # Various helper functions for processing data obtained from Toggl reports and graphing said data using plot.ly
+
+
 from References import *
+
 
 # readTimerEntry
 # @param entryLine: text line of a single timer entry
 # @return: a string tuple (projects, description, startDate, startTime, endDate, endTime, duration, tags)
 #          dates are in format YYYY-MM-DD and times are in HH:MM:SS 24-hour time
 def readTimerEntry(entryLine):
-    entryLine = adjustBeggnning(entryLine)
+    entryLine = adjustBeggnning(entryLine, gmail)
     entryLine = toNextComma(entryLine)
     entryLine = toNextComma(entryLine)
 
@@ -48,6 +51,8 @@ def toNextComma(entryLine):
     return adjustBeggnning(entryLine, ',')
 
 
+# Returns the entryLine param with the beginning adjusted to the first occurence of the target string
+# If the target string does not appear in the entryLine, the orginial entryLine is returned
 def adjustBeggnning(entryLine, target):
     if entryLine.find(target) != -1:
         return entryLine[entryLine.find(target) + len(target):]
@@ -59,31 +64,36 @@ def getToken(entryLine):
     return entryLine[:entryLine.find(',')]
 
 
+# Returns an int representing the numerical value of the day of the month
 def dayNum(date):
     date = date[date.find('-') + 1:]
     date = date[date.find('-') + 1:]
     return int(date)
 
 
-def relDayNum(date, mon):
-    if date[5:7] != mon[5:7]:
-        if mon[5:7] == "04" or mon[5:7] == "06" or mon[5:7] == "09" or mon[5:7] == "11":
-            return dayNum(date) + 30 - dayNum(mon)
-        elif mon[5:7] == "02":
-            if isinstance(int(mon[2:4]) / 4, int):
-                return dayNum(date) + 29 - dayNum(mon)
+# Returns the number of days between date and startDate given date is after startDate
+# Accurate until the year 2400, which it will count as a leap year, if we still use the gregorian calendar that is
+def relDayNum(date, startDate):
+    if date[5:7] != startDate[5:7]:
+        if startDate[5:7] == "04" or startDate[5:7] == "06" or startDate[5:7] == "09" or startDate[5:7] == "11":
+            return dayNum(date) + 30 - dayNum(startDate)
+        elif startDate[5:7] == "02":
+            if isinstance(int(startDate[2:4]) / 4, int):
+                return dayNum(date) + 29 - dayNum(startDate)
             else:
-                return dayNum(date) + 28 - dayNum(mon)
+                return dayNum(date) + 28 - dayNum(startDate)
         else:
-            return dayNum(date) + 30 - dayNum(mon)
+            return dayNum(date) + 30 - dayNum(startDate)
     else:
-        return dayNum(date) - dayNum(mon)
+        return dayNum(date) - dayNum(startDate)
 
 
+# Converts a 24-hour HH:MM:SS time into an integer of seconds
 def timeToNum(time):
     return int(time[6:]) + (60 * int(time[3:5])) + (3600 * int(time[:2]))
 
 
+# Converts an integer of seconds to 24-hour HH::MM::SS
 def backToTime(time):
     seconds = time % 60
     minutes = (time // 60) % 60
@@ -97,37 +107,41 @@ def backToTime(time):
     return str(hours) + ":" + str(minutes) + ":" + str(seconds)
 
 
-def backToTimerEntry(dataTuple):
-    if dataTuple == "Untracked":
-        return dataTuple
+# Converts an entryTuple back to the original string format provided by the Toggl report
+def backToTimerEntry(entryTuple):
+    if entryTuple == "Untracked":
+        return entryTuple
     else:
-        tags = dataTuple[ind["tagI"]]
+        tags = entryTuple[ind["tagI"]]
         if tags.find(",") != -1:
             tags = '"' + tags + '"'
-        return "Andrewsmathias42,andrewsmathias42@gmail.com,," + dataTuple[ind["projI"]] + ",," + dataTuple[ind["descI"]] \
-           + ",No," + dataTuple[ind["sdI"]] + "," + dataTuple[ind["stI"]] + "," + dataTuple[ind["edI"]] + "," \
-           + dataTuple[ind["etI"]] + "," + dataTuple[ind["durI"]] + "," + tags + ","
+        return "Andrewsmathias42,andrewsmathias42@gmail.com,," + entryTuple[ind["projI"]] + ",," + entryTuple[ind["descI"]] \
+           + ",No," + entryTuple[ind["sdI"]] + "," + entryTuple[ind["stI"]] + "," + entryTuple[ind["edI"]] + "," \
+           + entryTuple[ind["etI"]] + "," + entryTuple[ind["durI"]] + "," + tags + ","
 
 
-def grabNextWeeksPortion(dataTuple):
-    if dataTuple[ind["sdI"]] == dataTuple[ind["edI"]]:
+# Returns an entryTuple which is the first entry for next week unless it was not tracked
+def grabNextWeeksPortion(entryTuple):
+    if entryTuple[ind["sdI"]] == entryTuple[ind["edI"]]:
         return "Untracked"
     else:
-        return dataTuple[ind["projI"]], dataTuple[ind["descI"]], dataTuple[ind["edI"]], '00:00:00', dataTuple[ind["edI"]], \
-           dataTuple[ind["etI"]], dataTuple[ind["etI"]], dataTuple[ind["tagI"]]
+        return entryTuple[ind["projI"]], entryTuple[ind["descI"]], entryTuple[ind["edI"]], '00:00:00', entryTuple[ind["edI"]], \
+           entryTuple[ind["etI"]], entryTuple[ind["etI"]], entryTuple[ind["tagI"]]
 
 
-def fixThisWeeksPortion(dataTuple):
-    if dataTuple[ind["sdI"]] == dataTuple[ind["edI"]]:
-        return dataTuple
+# Returns the entryTuple which is the last entry of the current week, edited to end before midnight if needed
+def fixThisWeeksPortion(entryTuple):
+    if entryTuple[ind["sdI"]] == entryTuple[ind["edI"]]:
+        return entryTuple
     else:
-        return dataTuple[ind["projI"]], dataTuple[ind["descI"]], dataTuple[ind["sdI"]], dataTuple[ind["stI"]], dataTuple[ind["sdI"]], "23:59:00", backToTime(timeToNum("23:59:00") - timeToNum(dataTuple[ind["stI"]])), dataTuple[ind["tagI"]]
+        return entryTuple[ind["projI"]], entryTuple[ind["descI"]], entryTuple[ind["sdI"]], entryTuple[ind["stI"]], entryTuple[ind["sdI"]], "23:59:00", backToTime(timeToNum("23:59:00") - timeToNum(entryTuple[ind["stI"]])), entryTuple[ind["tagI"]]
 
 
 def weekTuplesToString(weekTuple):
     return weekTuple[0] + ", " + weekTuple[1] + ", " + weekTuple[2] + ", "
 
 
+# Returns a tuple of all the individual tags in the tags string
 def separateTags(tags):
     tagsList = []
     tags = adjustBeggnning(tags, '"')
@@ -141,6 +155,8 @@ def separateTags(tags):
 
     return tuple(tagsList)
 
+
+# Returns a dictionary of projects:colors(rgb) from the master dictionary of possible projects
 def colorDictMaker(projectList):
     colorDict = {}
     for project in projectList:
@@ -149,19 +165,15 @@ def colorDictMaker(projectList):
         colorDict[project] = masterColorsdict[adjProject]
     return colorDict
 
-def minuteResolutionList(entryTokenList):
-    newResList = []
-    for entry in entryTokenList:
-        newResList.append(minuteResolutionEntry(entry))
-    return newResList
 
-
+# Removes all instances of a char from the param str and returns the new str
 def removeChar(str, char):
     while str.find(char) != -1:
         str = str[:str.find(char)] + str[str.find(char) + 1:]
     return str
 
 
+# Returns a string of commas and the first letters of the tags up to 2 tags
 def tagsInitials(tag):
     if tag == "":
         return "   "
@@ -171,6 +183,7 @@ def tagsInitials(tag):
         return ", " + tag[:1] + ", " + tag[tag.find(',') + 2: tag.find(',') + 3]
 
 
+# Takes a 24-hr HH::MM::SS time and returns a new one rounded to the nearest minute
 def minuteResolutionTime (timeString):
     hours = timeString[:2]
     if int(timeString[6:]) < 30:
@@ -195,8 +208,9 @@ def minuteResolutionTime (timeString):
         return hours + ":" + minutes + ":00"
 
 
-def minuteResolutionEntry(dataTuple):
-    return dataTuple[ind["projI"]], dataTuple[ind["descI"]], dataTuple[ind["sdI"]], \
-           minuteResolutionTime(dataTuple[ind["stI"]]), dataTuple[ind["edI"]], \
-           minuteResolutionTime(dataTuple[ind["etI"]]), dataTuple[ind["durI"]], dataTuple[ind["tagI"]]
+# Takes in an entryTuple and returns it with the times rounded to the nearest minute
+def minuteResolutionEntry(entryTuple):
+    return entryTuple[ind["projI"]], entryTuple[ind["descI"]], entryTuple[ind["sdI"]], \
+           minuteResolutionTime(entryTuple[ind["stI"]]), entryTuple[ind["edI"]], \
+           minuteResolutionTime(entryTuple[ind["etI"]]), entryTuple[ind["durI"]], entryTuple[ind["tagI"]]
 

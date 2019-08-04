@@ -9,8 +9,9 @@ import datetime
 oneWeek = datetime.timedelta(6)
 
 togglRequestURL = "https://toggl.com/reports/api/v2/details.csv"
+
 # TODO: add your api token here:
-myAPItoken = "Yo insert your api token here"
+myAPItoken = "413d003896bb9046fbcbd41f6a26cddc"
 
 string = myAPItoken+':api_token'
 
@@ -24,12 +25,14 @@ def grabEntryList(endDay):
     params = {
         # TODO: add your email here:
         'user_agent': 'andrewsmathias2@gmail.com',
+
         # TODO: Add your workspace id here:
         'workspace_id': "2462605",
+
         # date span of entries to be grabbed
-        # If you want to change the duration from a week you have to edit the timedelta object
         'since': str(endDay - oneWeek)[:10],
         'until': str(endDay)[:10]
+        # If you want to change the duration from a week you have to edit the timedelta object
     }
 
     responseFile = requests.get(togglRequestURL, headers = headers, params = params)

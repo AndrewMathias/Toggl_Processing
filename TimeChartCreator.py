@@ -9,7 +9,7 @@ from GanttMaker import makeGantt
 from FileGrabber import grabEntryList
 
 
-###Local File Test
+# ###Local File Test
 # weekData = open(weekReport)
 # entryList = list(weekData)
 # entryList = entryList[1:]
@@ -122,7 +122,7 @@ for day in cumulativeDayTimes:
 
 weeklyData = open(weeklyAggregateFile, 'a')
 weeklyData.write("\n\nWeek " + entryTupleList[0][ind["sdI"]] + " : " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
-                 + "\n")
+                 + "\n\n")
 ## Print week's information
 for timer in cumulativeWeekTimes.keys():
     weeklyData.write(weekTuplesToString(timer) + backToTime(cumulativeWeekTimes[timer]) + "\n")
@@ -153,8 +153,5 @@ for day in cumulativeDayTimes:
 ## Weekly Sunburst chart
 sunFig = makeSunburst(cumulativeWeekTimes, "Full Week")
 sunFig.write_image("../../../Documents/Time Tracking/" + entryTupleList[0][ind["sdI"]] + " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]] + "/" + "Week Sunburst.pdf")
-
-# TODO: 1. Clean up and comment SunburstMaker and GanttMaker
-# TODO: 2. Create quarterly recording
 
 # TODO: Maybe add descriptive file names w/ dates
