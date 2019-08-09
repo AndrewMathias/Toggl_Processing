@@ -4,6 +4,7 @@
 
 
 from References import *
+import datetime
 
 
 # readTimerEntry
@@ -71,6 +72,45 @@ def dayNum(date):
     return int(date)
 
 
+# Returns an int representing the numerical value of the month
+def monthNum(date):
+    return int(date[5:7])
+
+
+# Returns an int representing the numerical value of the year
+def yearNum(date):
+    return int(date[:4])
+
+
+# Returns an int representing the numerical value of the month that the majority of the week resides in given wednesday date
+def whichMonthIsTheWeek(wednesday):
+    return monthNum(wednesday)
+
+
+#Returns the YYYY-MM-DD string for wednesday
+def getWednesday(dayTokenLists):
+    return str(dayTokenLists[3][0][ind["edI"]])
+
+
+# Returns an int 1-4 representing the quarter the week resides in given wednesday date
+def whichQuarter(wednesday):
+    if whichMonthIsTheWeek(wednesday) <= 3:
+        return 1
+    elif whichMonthIsTheWeek(wednesday) <= 6:
+        return 2
+    elif whichMonthIsTheWeek(wednesday) <= 9:
+        return 3
+    else:
+        return 4
+
+
+# Returns a boolean whether this week is a different quarter than last week
+def isNewQuarter(wednesday):
+    thisWednesday = datetime.date(yearNum(wednesday), monthNum(wednesday), dayNum(wednesday))
+    lastWednesday = thisWednesday - oneWeek
+    return whichQuarter(thisWednesday) != whichQuarter(lastWednesday)
+
+
 # Returns the number of days between date and startDate given date is after startDate
 # Accurate until the year 2400, which it will count as a leap year, if we still use the gregorian calendar that is
 def relDayNum(date, startDate):
@@ -83,7 +123,7 @@ def relDayNum(date, startDate):
             else:
                 return dayNum(date) + 28 - dayNum(startDate)
         else:
-            return dayNum(date) + 30 - dayNum(startDate)
+            return dayNum(date) + 31 - dayNum(startDate)
     else:
         return dayNum(date) - dayNum(startDate)
 
@@ -214,3 +254,13 @@ def minuteResolutionEntry(entryTuple):
            minuteResolutionTime(entryTuple[ind["stI"]]), entryTuple[ind["edI"]], \
            minuteResolutionTime(entryTuple[ind["etI"]]), entryTuple[ind["durI"]], entryTuple[ind["tagI"]]
 
+
+# Reads a line from the weekly aggregate file and returns a 2-tuple of a 3-tuple (project, description, tags) and the value of seconds
+def readWeeklyLineReport(line):
+    tokenList = line.split(", ")
+    tagIndex = 2
+    tags = tokenList[tagIndex]
+    while tagIndex < len(tokenList) - 2:
+        tagIndex += 1
+        tags += ", " + tokenList[tagIndex]
+    return ((tokenList[0], tokenList[1], tags), timeToNum(tokenList[len(tokenList) - 1]))

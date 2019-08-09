@@ -7,10 +7,11 @@ import datetime
 # files
 weeklyAggregateFile = "C:/Users/andre/Documents/Time Tracking/Weekly_Time_Data_Aggregate.csv"
 quarterlyAggregateFile = "C:/Users/andre/Documents/Time Tracking/Quarterly_Time_Data_Aggregate.csv"
-weekReport = "ReportSourceFiles/Toggl_time_entries_2019-07-22_to_2019-07-28.csv"
+weekReport = "ReportSourceFiles/Toggl_time_entries_2019-07-08_to_2019-07-14 (3).csv"
 
 # other references
 oneDay = datetime.timedelta(1)
+oneWeek = datetime.timedelta(7)
 quotes = '"'
 gmail = "@gmail.com"
 ind = {"projI": 0, "descI": 1, "sdI": 2, "stI": 3, "edI": 4, "etI": 5, "durI": 6, "tagI": 7}

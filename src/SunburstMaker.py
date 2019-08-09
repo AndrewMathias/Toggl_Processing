@@ -3,17 +3,14 @@
 # Functions that facilitate the construction of plot.ly sunburst charts given a dictionary of timer entries
 # with the corresponding value of seconds
 
-from References import *
 from HelperFunctions import *
 import plotly.graph_objects as go
 
 
-# Reduces a number of seconds into five minutes rounding down, returning at least 1
+# Reduces a number of seconds into five minutes rounding down
 def fiveMinuteRes(seconds):
-    fivemin = int(seconds / 300)
-    if fivemin == 0:
-        fivemin = 1
-    return fivemin
+    return int(seconds / 300)
+
 
 # Returns a list of rgb colors corresponding with the list of labels
 def colorsListSunburst(sunColorDict, justNameLabels):

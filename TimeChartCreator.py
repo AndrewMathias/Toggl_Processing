@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import os
-import datetime
 from HelperFunctions import *
 from References import *
 from SunburstMaker import makeSunburst
@@ -58,7 +57,7 @@ rT = []
 fT = []
 aT = []
 uT = []
-dayTokenLists = [mT, tT, wT, rT, fT, aT, uT]
+dayTokenLists = [uT, mT, tT, wT, rT, fT, aT]
 
 ## Sorting entryTuples into lists for each day for Gantt charts
 for entry in entryTupleList:
@@ -77,7 +76,7 @@ R = {}
 F = {}
 A = {}
 U = {}
-cumulativeDayTimes = [M, T, W, R, F, A, U]
+cumulativeDayTimes = [U, M, T, W, R, F, A]
 
 ## Accumulating time for each timer in the respective day dictionary
 for entry in entryTupleList:
@@ -118,9 +117,42 @@ for day in cumulativeDayTimes:
 ## cumulativeWeekTimes is a dictionary with the keys (project, description, tags) and the value of time in seconds
 
 
-### Printing to weekly aggregate file
+### Printing to weekly and quarterly aggregate files
 
 weeklyData = open(weeklyAggregateFile, 'a')
+## Print quarter information
+if isNewQuarter(getWednesday(dayTokenLists)):
+    weeklyData.write("\n\n" + yearNum(getWednesday(dayTokenLists)) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))))
+    weeklyData.close()
+    weeklyData = open(weeklyAggregateFile, 'r')
+    lastQuarter = str(yearNum(getWednesday(dayTokenLists) - oneWeek)) + "-Q" + whichQuarter(getWednesday(dayTokenLists)-oneWeek)
+
+    ## Accumulate data from weeklyAggregateFile
+    cumulativeQuarterTimes = {}
+    recordFlag = False
+    for line in weeklyData:
+        if recordFlag:
+            if line.find(',') != -1:
+                if getToken(line) != "Andrewsmathias42":
+                    entry = readWeeklyLineReport(line)
+                    if entry[0] in cumulativeQuarterTimes:
+                        cumulativeQuarterTimes[entry[0]] += entry[1]
+                    else:
+                        cumulativeQuarterTimes[entry[0]] = entry[1]
+
+        elif line[:2] == "20":
+            if line[:7] == lastQuarter:
+                recordFlag = True
+
+    # write quarterly data
+    quarterlyData = open(quarterlyAggregateFile, 'a')
+    quarterlyData.write(yearNum(getWednesday(dayTokenLists)) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))) + "\n\n")
+    for timer in cumulativeQuarterTimes.keys():
+        quarterlyData.write(weekTuplesToString(timer) + backToTime(cumulativeQuarterTimes[timer]) + "\n")
+    quarterlyData.write("\n\n")
+
+    weeklyData = open(weeklyAggregateFile, 'a')
+
 weeklyData.write("\n\nWeek " + entryTupleList[0][ind["sdI"]] + " : " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
                  + "\n\n")
 ## Print week's information
@@ -132,7 +164,9 @@ weeklyData.close()
 ### Creating chart files
 
 ## Creating week folder
-dirName = "C:/Users/andre/Documents/Time Tracking/" + entryTupleList[0][ind["sdI"]] + " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
+dirName = "C:/Users/andre/Documents/Time Tracking/" + getWednesday(dayTokenLists)[:4] + "/Q" + \
+          str(whichQuarter(getWednesday(dayTokenLists))) + "/" + entryTupleList[0][ind["sdI"]] + \
+          " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
 if not os.path.exists(dirName):
     os.mkdir(dirName)
 
@@ -140,18 +174,21 @@ if not os.path.exists(dirName):
 dayCount = 0
 for day in dayTokenLists:
     ganttFig = makeGantt(day, dayNumAbbrev[dayCount])
-    ganttFig.write_image("../../../Documents/Time Tracking/" + entryTupleList[0][ind["sdI"]] + " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]] + "/" + dayNumAbbrev[dayCount] + " Gantt.pdf")
+    daySeparation = datetime.timedelta(7 - dayCount)
+    ganttFig.write_image(dirName + "/" + str(datetime.datetime.today() - daySeparation)[5:10] + " " +
+                         dayNumAbbrev[dayCount] + " Gantt.pdf")
     dayCount += 1
 
 ## Daily Sunburst charts
 dayCount = 0
 for day in cumulativeDayTimes:
     sunFig = makeSunburst(day, dayNumAbbrev[dayCount])
-    sunFig.write_image("../../../Documents/Time Tracking/" + entryTupleList[0][ind["sdI"]] + " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]] + "/" + dayNumAbbrev[dayCount] + " Sunburst.pdf")
+    daySeparation = datetime.timedelta(7 - dayCount)
+    sunFig.write_image(dirName + "/" + str(datetime.datetime.today() - daySeparation)[5:10] + " " +
+                       dayNumAbbrev[dayCount] + " Sunburst.pdf")
     dayCount += 1
 
 ## Weekly Sunburst chart
 sunFig = makeSunburst(cumulativeWeekTimes, "Full Week")
-sunFig.write_image("../../../Documents/Time Tracking/" + entryTupleList[0][ind["sdI"]] + " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]] + "/" + "Week Sunburst.pdf")
+sunFig.write_image(dirName + "/" + "Week Sunburst.pdf")
 
-# TODO: Maybe add descriptive file names w/ dates
