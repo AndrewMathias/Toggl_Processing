@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 import os
-from HelperFunctions import *
-from References import *
-from SunburstMaker import makeSunburst
-from GanttMaker import makeGantt
-from FileGrabber import grabEntryList
+from src.HelperFunctions import *
+from src.References import *
+from src.SunburstMaker import makeSunburst
+from src.GanttMaker import makeGantt
+from src.FileGrabber import grabEntryList
 
 
 # ###Local File Test
@@ -16,6 +16,7 @@ from FileGrabber import grabEntryList
 ###FileGrabber
 date = datetime.datetime.today() - oneDay #Auto runs every Sunday 11:30 AM. Gives report of Sunday - Saturday
 entryList = grabEntryList(date)
+
 
 ## entryList now contains each timer entry line as each element of the list
 

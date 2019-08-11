@@ -3,7 +3,7 @@
 # Functions that facilitate the construction of plot.ly sunburst charts given a dictionary of timer entries
 # with the corresponding value of seconds
 
-from HelperFunctions import *
+from src.HelperFunctions import *
 import plotly.graph_objects as go
 
 

@@ -2,7 +2,7 @@
 # Author: Andrew Mathias
 # Functions that facilitate the construction of plot.ly gantt charts given a list of entry tuples
 
-from HelperFunctions import *
+from src.HelperFunctions import *
 import plotly.figure_factory as ff
 
 

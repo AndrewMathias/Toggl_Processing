@@ -3,7 +3,7 @@
 # Various helper functions for processing data obtained from Toggl reports and graphing said data using plot.ly
 
 
-from References import *
+from src.References import *
 import datetime
 
 
@@ -108,7 +108,7 @@ def whichQuarter(wednesday):
 def isNewQuarter(wednesday):
     thisWednesday = datetime.date(yearNum(wednesday), monthNum(wednesday), dayNum(wednesday))
     lastWednesday = thisWednesday - oneWeek
-    return whichQuarter(thisWednesday) != whichQuarter(lastWednesday)
+    return whichQuarter(str(thisWednesday)) != whichQuarter(str(lastWednesday))
 
 
 # Returns the number of days between date and startDate given date is after startDate
