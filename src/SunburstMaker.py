@@ -19,16 +19,15 @@ def colorsListSunburst(sunColorDict, justNameLabels):
     for label in justNameLabels:
         if label in sunColorDict:
             myColorList.append(sunColorDict[label])
-        elif label == "Discouraged":
-            myColorList.append("rgb(150, 20, 0)")
-        elif label == "Encouraged":
-            myColorList.append("rgb(0, 200, 140)")
+        elif label in tagColorsdict.keys():
+            myColorList.append(tagColorsdict[label])
         else:
             myColorList.append("")
     return myColorList
 
 
-# Returns a figure of a sunburst chart given a dictionary of timers to value in seconds
+# Returns a figure of a sunburst chart with a five minute resolution in terms of sector ratios
+# if given a dictionary of timers to value in seconds
 def makeSunburst(timerDict, myTitle):
     myLabels = []
     justNameLabels = []

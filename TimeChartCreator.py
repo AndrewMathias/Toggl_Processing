@@ -1,3 +1,7 @@
+#TimeChartCreator.py
+# Author: Andrew Mathias
+# Grabs data from Toggl, processes it, and produces pdf graphs of last week's tracked data
+
 #!/usr/bin/python
 
 import os
@@ -7,15 +11,20 @@ from src.SunburstMaker import makeSunburst
 from src.GanttMaker import makeGantt
 from src.FileGrabber import grabEntryList
 
+if weekStartsMon:
+    dayNumAbbrev = dayNumAbbrevMon
+else:
+    dayNumAbbrev = dayNumAbbrevSun
 
-# ###Local File Test
+
+# ###Local File Test - grabs data from a manually saved detailed report (csv format) instead of the Toggl API
 # weekData = open(weekReport)
 # entryList = list(weekData)
 # entryList = entryList[1:]
 
 ###FileGrabber
-date = datetime.datetime.today() - oneDay #Auto runs every Sunday 11:30 AM. Gives report of Sunday - Saturday
-entryList = grabEntryList(date)
+date = datetime.datetime.today() - oneDay
+entryList = grabEntryList(date, oneWeekSpan)
 
 
 ## entryList now contains each timer entry line as each element of the list
@@ -23,14 +32,19 @@ entryList = grabEntryList(date)
 entryTupleList = []
 
 ### Obtain entry that straddled the previous week
-weeklyData = open(weeklyAggregateFile)
-line = ""
-for line in weeklyData:
-    pass
-lastWeeksEntry = readTimerEntry(line)
-if lastWeeksEntry != "Untracked":
-    entryTupleList.append(lastWeeksEntry)
-weeklyData.close()
+weeklyAggregateFileSetUp = True
+if not os.path.exists(weeklyAggregateFile):
+    weeklyAggregateFileSetUp = False
+else:
+    weeklyData = open(weeklyAggregateFile, "r")
+    line = ""
+    for line in weeklyData:
+        pass
+    lastWeeksEntry = readTimerEntry(line)
+
+    if lastWeeksEntry != "Untracked":
+        entryTupleList.append(lastWeeksEntry)
+    weeklyData.close()
 
 
 ### Adding new entries and fixing final entry
@@ -119,77 +133,86 @@ for day in cumulativeDayTimes:
 
 
 ### Printing to weekly and quarterly aggregate files
-
-weeklyData = open(weeklyAggregateFile, 'a')
-## Print quarter information
-if isNewQuarter(getWednesday(dayTokenLists)):
-    weeklyData.write("\n\n" + yearNum(getWednesday(dayTokenLists)) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))))
-    weeklyData.close()
-    weeklyData = open(weeklyAggregateFile, 'r')
-    lastQuarter = str(yearNum(getWednesday(dayTokenLists) - oneWeek)) + "-Q" + whichQuarter(getWednesday(dayTokenLists)-oneWeek)
-
-    ## Accumulate data from weeklyAggregateFile
-    cumulativeQuarterTimes = {}
-    recordFlag = False
-    for line in weeklyData:
-        if recordFlag:
-            if line.find(',') != -1:
-                if getToken(line) != "Andrewsmathias42":
-                    entry = readWeeklyLineReport(line)
-                    if entry[0] in cumulativeQuarterTimes:
-                        cumulativeQuarterTimes[entry[0]] += entry[1]
-                    else:
-                        cumulativeQuarterTimes[entry[0]] = entry[1]
-
-        elif line[:2] == "20":
-            if line[:7] == lastQuarter:
-                recordFlag = True
-
-    # write quarterly data
-    quarterlyData = open(quarterlyAggregateFile, 'a')
-    quarterlyData.write(yearNum(getWednesday(dayTokenLists)) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))) + "\n\n")
-    for timer in cumulativeQuarterTimes.keys():
-        quarterlyData.write(weekTuplesToString(timer) + backToTime(cumulativeQuarterTimes[timer]) + "\n")
-    quarterlyData.write("\n\n")
-
+if weeklyAggregateFileSetUp:
     weeklyData = open(weeklyAggregateFile, 'a')
+else:
+    weeklyData = open(weeklyAggregateFile, 'w+')
+    weeklyData.write(str(yearNum(getWednesday(dayTokenLists))) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))))
 
-weeklyData.write("\n\nWeek " + entryTupleList[0][ind["sdI"]] + " : " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
-                 + "\n\n")
-## Print week's information
-for timer in cumulativeWeekTimes.keys():
-    weeklyData.write(weekTuplesToString(timer) + backToTime(cumulativeWeekTimes[timer]) + "\n")
+if recordWeeklySummary:
+    ## Print quarter information
+    if recordQuarterlySummary:
+        if isNewQuarter(getWednesday(dayTokenLists)):
+            weeklyData.write("\n\n" + str(yearNum(getWednesday(dayTokenLists))) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))))
+            weeklyData.close()
+            weeklyData = open(weeklyAggregateFile, 'r')
+            lastQuarter = str(yearNum(getWednesday(dayTokenLists) - oneWeek)) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists)-oneWeek))
+
+            ## Accumulate data from weeklyAggregateFile
+            cumulativeQuarterTimes = {}
+            recordFlag = False
+            for line in weeklyData:
+                if recordFlag:
+                    if line.find(',') != -1:
+                        if getToken(line) != username:
+                            entry = readWeeklyLineReport(line)
+                            if entry[0] in cumulativeQuarterTimes:
+                                cumulativeQuarterTimes[entry[0]] += entry[1]
+                            else:
+                                cumulativeQuarterTimes[entry[0]] = entry[1]
+
+                elif line[:2] == "20":
+                    if line[:7] == lastQuarter:
+                        recordFlag = True
+
+            # write quarterly data
+            quarterlyData = open(quarterlyAggregateFile, 'a+')
+            quarterlyData.write(yearNum(getWednesday(dayTokenLists)) + "-Q" + str(whichQuarter(getWednesday(dayTokenLists))) + "\n\n")
+            for timer in cumulativeQuarterTimes.keys():
+                quarterlyData.write(weekTuplesToString(timer) + backToTime(cumulativeQuarterTimes[timer]) + "\n")
+            quarterlyData.write("\n\n")
+
+            weeklyData = open(weeklyAggregateFile, 'a')
+
+    weeklyData.write("\n\nWeek " + entryTupleList[0][ind["sdI"]] + " : " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
+                     + "\n\n")
+    ## Print week's information
+    for timer in cumulativeWeekTimes.keys():
+        weeklyData.write(weekTuplesToString(timer) + backToTime(cumulativeWeekTimes[timer]) + "\n")
 weeklyData.write("\n" + straddledRecordToWrite)
 weeklyData.close()
 
 ### Creating chart files
 
 ## Creating week folder
-dirName = "C:/Users/andre/Documents/Time Tracking/" + getWednesday(dayTokenLists)[:4] + "/Q" + \
+dirName = trackedTimeDataFolderPath + getWednesday(dayTokenLists)[:4] + "/Q" + \
           str(whichQuarter(getWednesday(dayTokenLists))) + "/" + entryTupleList[0][ind["sdI"]] + \
           " to " + entryTupleList[len(entryTupleList) - 1][ind["edI"]]
 if not os.path.exists(dirName):
     os.mkdir(dirName)
 
 ## Gantt charts
-dayCount = 0
-for day in dayTokenLists:
-    ganttFig = makeGantt(day, dayNumAbbrev[dayCount])
-    daySeparation = datetime.timedelta(7 - dayCount)
-    ganttFig.write_image(dirName + "/" + str(datetime.datetime.today() - daySeparation)[5:10] + " " +
-                         dayNumAbbrev[dayCount] + " Gantt.pdf")
-    dayCount += 1
+if createGanttCharts:
+    dayCount = 0
+    for day in dayTokenLists:
+        ganttFig = makeGantt(day, dayNumAbbrev[dayCount])
+        daySeparation = datetime.timedelta(7 - dayCount)
+        ganttFig.write_image(dirName + "/" + str(datetime.datetime.today() - daySeparation)[5:10] + " " +
+                             dayNumAbbrev[dayCount] + " Gantt.pdf")
+        dayCount += 1
 
 ## Daily Sunburst charts
-dayCount = 0
-for day in cumulativeDayTimes:
-    sunFig = makeSunburst(day, dayNumAbbrev[dayCount])
-    daySeparation = datetime.timedelta(7 - dayCount)
-    sunFig.write_image(dirName + "/" + str(datetime.datetime.today() - daySeparation)[5:10] + " " +
-                       dayNumAbbrev[dayCount] + " Sunburst.pdf")
-    dayCount += 1
+if createSunburstCharts:
+    dayCount = 0
+    for day in cumulativeDayTimes:
+        sunFig = makeSunburst(day, dayNumAbbrev[dayCount])
+        daySeparation = datetime.timedelta(7 - dayCount)
+        sunFig.write_image(dirName + "/" + str(datetime.datetime.today() - daySeparation)[5:10] + " " +
+                           dayNumAbbrev[dayCount] + " Sunburst.pdf")
+        dayCount += 1
 
 ## Weekly Sunburst chart
-sunFig = makeSunburst(cumulativeWeekTimes, "Full Week")
-sunFig.write_image(dirName + "/" + "Week Sunburst.pdf")
+if createFullWeekSunburstChart:
+    sunFig = makeSunburst(cumulativeWeekTimes, "Full Week")
+    sunFig.write_image(dirName + "/" + "Week Sunburst.pdf")
 

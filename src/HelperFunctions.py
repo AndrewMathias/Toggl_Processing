@@ -67,9 +67,7 @@ def getToken(entryLine):
 
 # Returns an int representing the numerical value of the day of the month
 def dayNum(date):
-    date = date[date.find('-') + 1:]
-    date = date[date.find('-') + 1:]
-    return int(date)
+    return int(date[8:10])
 
 
 # Returns an int representing the numerical value of the month
@@ -92,7 +90,8 @@ def getWednesday(dayTokenLists):
     return str(dayTokenLists[3][0][ind["edI"]])
 
 
-# Returns an int 1-4 representing the quarter the week resides in given wednesday date
+# Returns an int 1-4 representing the quarter the week resides in given the wednesday date of the week.
+# The week is classified as belonging to the quarter in which the wednesday resides
 def whichQuarter(wednesday):
     if whichMonthIsTheWeek(wednesday) <= 3:
         return 1
@@ -155,7 +154,7 @@ def backToTimerEntry(entryTuple):
         tags = entryTuple[ind["tagI"]]
         if tags.find(",") != -1:
             tags = '"' + tags + '"'
-        return "Andrewsmathias42,andrewsmathias42@gmail.com,," + entryTuple[ind["projI"]] + ",," + entryTuple[ind["descI"]] \
+        return username + "," + email + ",," + entryTuple[ind["projI"]] + ",," + entryTuple[ind["descI"]] \
            + ",No," + entryTuple[ind["sdI"]] + "," + entryTuple[ind["stI"]] + "," + entryTuple[ind["edI"]] + "," \
            + entryTuple[ind["etI"]] + "," + entryTuple[ind["durI"]] + "," + tags + ","
 

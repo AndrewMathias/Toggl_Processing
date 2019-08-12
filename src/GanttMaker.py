@@ -32,7 +32,8 @@ def makeGantt(entryTupleList, myTitle):
     colors = colorDictMaker(list(projectDict.keys()))
 
     fig = ff.create_gantt(df, colors=colors, index_col='Resource', title=myTitle, show_colorbar=True, group_tasks=True)
-    myMarker = dict(color = 'rgba(0, 0, 0, 0)')
-    for i in fig['data']:
-        i.update(marker=myMarker)
+    if removeGanttDotsButAlsoLegend:
+        myMarker = dict(color = 'rgba(0, 0, 0, 0)')
+        for i in fig['data']:
+            i.update(marker=myMarker)
     return fig
